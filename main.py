@@ -11,6 +11,11 @@ pd.options.mode.chained_assignment = None
 ###############Hypothesis 1###################
 
 def read_movies_data_files(): # called
+    """
+    Reads data related to movie analysis. First dataset containing the movie titles, MPA ratings, and a few more fields is split into two different files.
+    Second dataset contains scraped scores from Kids-In-Mind website.
+    :return: two pandas dataframe containing MPA ratings and KIM ratings
+    """
     df_1 = pd.read_csv('data//IMDBdata_MainData.csv')
     df_2 = pd.read_csv('data//IMDBdata_MainData2.csv')
     data = pd.concat([df_1, df_2]).drop_duplicates(subset=['Title']).reset_index(drop=True)
@@ -23,6 +28,13 @@ def read_movies_data_files(): # called
     return data, kim_data
 
 def movies_processing(mpa_data, kim_data): #called
+    """
+    Merging datasets and creating one large dataframe with MPA and KIM scores for each movie. Cleaning and processing a few columns and making values uniform.
+    Calculating Aggregate KIM score by summing individual KIM score values.
+    :param mpa_data: Dataframe containing MPA ratings for movie titles
+    :param kim_data: Dataframe containing KIM scores for movie titles
+    :return: Dataframe with movies released in and after 1992
+    """
     temp_join = pd.merge(mpa_data, kim_data, on='Title')
     temp_join = temp_join[['Title', 'Rated', 'Released', 'Genre', 'Plot', 'Rating']]
 
@@ -55,6 +67,11 @@ def movies_processing(mpa_data, kim_data): #called
     return post92
 
 def calculate_unweighted_score(data): #called
+    """
+
+    :param data: Merged dataframe containing MPA and KIM scores for each movie
+    :return: Dataframe with unweighted KIM scores and percentage distribution of ratings across years.
+    """
     percentages = data.groupby('Year')['Rated'].apply(lambda x: x.value_counts(normalize=True)).unstack()
     percentages['unw_kim_score'] = data.groupby('Year')['agg_score'].mean()
 
@@ -62,6 +79,14 @@ def calculate_unweighted_score(data): #called
 
 
 def calculate_weighted_score(row, col_num, mean_percentage, normalize_dict): #called
+    """
+    Calculating weighted KIM score using the mean percentage distribution of ratings over years.
+    :param row: row of dataframe being processed
+    :param col_num: column number being updated (aggregate kim score)
+    :param mean_percentage: dictionary of mean percentage distribution for each rating
+    :param normalize_dict: dictionary containing percentage distribution of ratings across years
+    :return: weighted KIM score
+    """
     year = row[6]
     rated = row[1]
     weight = mean_percentage[rated] / normalize_dict[rated][year]
@@ -69,6 +94,11 @@ def calculate_weighted_score(row, col_num, mean_percentage, normalize_dict): #ca
 
 
 def calculate_score_correlation(data):
+    """
+    Calculating correlation between individual KIM category scores (sex, nudity, violence)
+    :param data: Dataframe with weighted KIM score
+    :return: dictionary with correlation scores
+    """
     correlations = {}
     cols_corr = ['weighted_sex_score', 'weighted_violence_score', 'weighted_language_score']
     comb = combinations(cols_corr, 2)

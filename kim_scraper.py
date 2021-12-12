@@ -41,5 +41,5 @@ for key, val in movies_dict.items():
         movies_dict[key] = new_str
 
 
-with open('data//kinds_in_mind_data.json', 'w') as fp:
+with open('data//kinds_in_mind_data2.json', 'w') as fp:
     json.dump(movies_dict, fp)
