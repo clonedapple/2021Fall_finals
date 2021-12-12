@@ -111,6 +111,10 @@ def calculate_score_correlation(data):
 ###############Hypothesis 2###################
 
 def read_music_data_files():
+    """
+    Reading in the billboards dataset, songs metadata dataset and a list containing profane words
+    :return: Two dataframes containing billboards data and songs metadata and a text file containing profane words.
+    """
     music_df = pd.read_csv('data//tcc_ceds_music.csv')
     charts_df = pd.read_csv('data//charts.csv')
 
@@ -127,6 +131,12 @@ def read_music_data_files():
             pop_value = popularity[row[1]][year] * 100
 
 def music_processing(charts_df,music_df):
+    """
+    Processes the charts_df dataframe to convert songs column to lowercase and merges the two datasets. Also merges pop and hiphop genre.
+    :param charts_df: Dataframe containing billboards data
+    :param music_df: Dataframe containing songs metadata
+    :return: Dataframe containing data from the merged dataset from 1959
+    """
     charts_df['song'] = charts_df['song'].str.lower()
     charts_df = charts_df.drop_duplicates(subset=['song', 'artist'])
     charts_df['artist'] = charts_df['artist'].str.lower()
@@ -142,6 +152,12 @@ def music_processing(charts_df,music_df):
     return post59
 
 def calculate_prof_percent(row, profanity_list):
+    """
+    Calculates profanity percent in each song in the dataset.
+    :param row: row of the dataframe being processed
+    :param profanity_list: list containing profane words
+    :return: Profanity percent score for each row
+    """
     lyrics = row[4].split(' ')
     total_length = len(lyrics)
     counter = 0
@@ -150,11 +166,13 @@ def calculate_prof_percent(row, profanity_list):
             counter += 1
     return (counter / total_length) * 100
 
-        # normalizing data due to difference in scale
-        cols_to_normalize = ['percent_share', 'percent_prof']
-        temp[cols_to_normalize] = temp[cols_to_normalize].apply(lambda x: (x - x.min()) / (x.max() - x.min()))
-
 def plot_genres(data, popularity):
+    """
+    Plotting profanity and popularity scores for each genre across years and calculating correlations between the two.
+    :param data: Dataframe containing profanity percentage for each genre across years
+    :param popularity: dictionary containing popularity distribution for each genre across years
+    :return: None
+    """
     sns.set(rc={'figure.figsize': (11.7, 8.27)})
     sns.set_theme(style="whitegrid")
     #     plt.style.use("bmh")
@@ -194,64 +212,5 @@ def plot_genres(data, popularity):
                    palette=['#08F7FE', '#FE53BB'], aspect=1.2, scatter_kws={"s": 20}, line_kws={"linewidth": 4}).set(
             title=title_text)
 
-###############
-
-def read_music_data_files():
-    music_df = pd.read_csv('data//tcc_ceds_music.csv')
-    charts_df = pd.read_csv('data//charts.csv')
-
-    # import profanity words
-    profanity_list = []
-    with open('data//bad_words.txt', 'r') as fp:
-        for row in fp:
-            profanity_list.append(row.replace('\n', ''))
-
-    return music_df, charts_df, profanity_list
-
-
-def music_processing(charts_df,music_df):
-    charts_df['song'] = charts_df['song'].str.lower()
-    charts_df = charts_df.drop_duplicates(subset=['song', 'artist'])
-    charts_df['artist'] = charts_df['artist'].str.lower()
-
-    merged_music = music_df.merge(charts_df, left_on=['track_name', 'artist_name'], right_on=['song', 'artist'],
-                                  how='inner')
-    post59 = merged_music[merged_music['release_date'] >= 1959][
-        ['artist_name', 'track_name', 'release_date', 'genre', 'lyrics', 'violence', 'obscene', 'topic', 'rank']]
-
-    # low numbers for hip-hop. replacing with pop
-    post59['genre'].replace('hip hop', 'pop', inplace=True)
-
-    return post59
-
-def calculate_prof_percent(row, profanity_list):
-    lyrics = row[4].split(' ')
-    total_length = len(lyrics)
-    counter = 0
-    for word in lyrics:
-        if word in profanity_list:
-            counter += 1
-    return (counter / total_length) * 100
-
-
-def plot_genres(data, popularity):
-    sns.set(rc={'figure.figsize': (11.7, 8.27)})
-    sns.set_theme(style="whitegrid")
-    #     plt.style.use("bmh")
-
-    plt.style.use("seaborn-dark")
-
-    for param in ['figure.facecolor', 'axes.facecolor', 'savefig.facecolor']:
-        plt.rcParams[param] = '#2F3235'  # bluish dark grey
-
-    for param in ['text.color', 'axes.labelcolor', 'xtick.color', 'ytick.color']:
-        plt.rcParams[param] = '0.9'  # very light grey
-
-    plt.rcParams['axes.linewidth'] = 2
-    #     ax.grid(color='#2A3459')  # bluish dark grey, but slightly lighter
-
-    genres = list(data['genre'].unique())
-    for genre in genres:
-        temp = data[data['genre'] == genre]
 
 
