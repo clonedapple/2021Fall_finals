@@ -126,9 +126,6 @@ def read_music_data_files():
 
     return music_df, charts_df, profanity_list
 
-        def popularity_lookup(row):
-            year = row[0]
-            pop_value = popularity[row[1]][year] * 100
 
 def music_processing(charts_df,music_df):
     """
