@@ -1,3 +1,4 @@
+<h1> Analyzing Explicit Content in Pop Culture Over Decades</h1> 
 The project focuses on analyzing pop culture over decades and understanding if we have become more accepting of explicit content in the media we consume. We aim to analyze two main mediums: Music and Movies.
 
 We are going to test the following hypothesis:
