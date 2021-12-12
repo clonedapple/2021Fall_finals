@@ -1,5 +1,7 @@
 <h1> Analyzing Explicit Content in Pop Culture Over Decades</h1> 
-The project focuses on analyzing pop culture over decades and understanding if we have become more accepting of explicit content in the media we consume. We aim to analyze two main mediums: Music and Movies.
+The project focuses on analyzing pop culture over decades and understanding if we have become more accepting of explicit content in the media we consume. We aim to analyze two main mediums: Music and Movies.<br  ><br  >
+
+***Important:*** If you are going to run the project, please avoid running the kim_scraper.py file again to avoid unnecessary web requests. We have included the scraped data in the data folder. 
 
 <h3>Datasets</h3>
 
