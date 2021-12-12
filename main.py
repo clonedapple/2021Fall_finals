@@ -34,6 +34,16 @@ def movies_processing(mpa_data, kim_data): #called
     :param mpa_data: Dataframe containing MPA ratings for movie titles
     :param kim_data: Dataframe containing KIM scores for movie titles
     :return: Dataframe with movies released in and after 1992
+    >>> mp_data = pd.read_csv('data//IMDBdata_MainData.csv')
+    >>> with open('data//kinds_in_mind_data.json', 'r') as f:
+    ...     kim = json.load(f)
+    >>> k_data = pd.DataFrame(kim.items(), columns=['Title', 'Rating'])
+    >>> merged = movies_processing(mp_data, k_data)
+    >>> (merged.iloc[13,:]['agg_score'] is not None) and (merged.iloc[13,:]['Rated'] is not None) is True
+    True
+
+    >>> merged[merged['Rated'] == 'UNRATED'].empty
+    True
     """
     temp_join = pd.merge(mpa_data, kim_data, on='Title')
     temp_join = temp_join[['Title', 'Rated', 'Released', 'Genre', 'Plot', 'Rating']]
@@ -68,9 +78,17 @@ def movies_processing(mpa_data, kim_data): #called
 
 def calculate_unweighted_score(data): #called
     """
-
+    Calculate unweighted KIM score for each row by using the mean function
     :param data: Merged dataframe containing MPA and KIM scores for each movie
     :return: Dataframe with unweighted KIM scores and percentage distribution of ratings across years.
+    >>> mp_data = pd.read_csv('data//IMDBdata_MainData.csv')
+    >>> with open('data//kinds_in_mind_data.json', 'r') as f:
+    ...     kim = json.load(f)
+    >>> k_data = pd.DataFrame(kim.items(), columns=['Title', 'Rating'])
+    >>> merged = movies_processing(mp_data, k_data)
+    >>> scores = calculate_unweighted_score(merged)
+    >>> scores.iloc[13,:]['unw_kim_score'] is not None
+    True
     """
     percentages = data.groupby('Year')['Rated'].apply(lambda x: x.value_counts(normalize=True)).unstack()
     percentages['unw_kim_score'] = data.groupby('Year')['agg_score'].mean()
@@ -86,10 +104,18 @@ def calculate_weighted_score(row, col_num, mean_percentage, normalize_dict): #ca
     :param mean_percentage: dictionary of mean percentage distribution for each rating
     :param normalize_dict: dictionary containing percentage distribution of ratings across years
     :return: weighted KIM score
+    >>> row = [0,'PG',0,0,0,0,1999]
+    >>> n_dict ={'PG':{1999:0}}
+    >>> mean_percentage = {'PG':13.5}
+    >>> calculate_weighted_score(row, 0, mean_percentage, n_dict)
+    0
     """
     year = row[6]
     rated = row[1]
-    weight = mean_percentage[rated] / normalize_dict[rated][year]
+    try:
+        weight = mean_percentage[rated] / normalize_dict[rated][year]
+    except ZeroDivisionError:
+        weight = 0
     return row[col_num] * weight
 
 
@@ -114,6 +140,12 @@ def read_music_data_files():
     """
     Reading in the billboards dataset, songs metadata dataset and a list containing profane words
     :return: Two dataframes containing billboards data and songs metadata and a text file containing profane words.
+    >>> x,y,prof_list = read_music_data_files()
+    >>> len(prof_list)>0
+    True
+
+    >>> x.empty
+    False
     """
     music_df = pd.read_csv('data//tcc_ceds_music.csv')
     charts_df = pd.read_csv('data//charts.csv')
@@ -133,6 +165,13 @@ def music_processing(charts_df,music_df):
     :param charts_df: Dataframe containing billboards data
     :param music_df: Dataframe containing songs metadata
     :return: Dataframe containing data from the merged dataset from 1959
+    >>> music, charts,  _ = read_music_data_files()
+    >>> merged = music_processing(charts, music)
+    >>> merged[merged['genre']== 'hiphop'].empty
+    True
+
+    >>> merged['release_date'].min() == 1959
+    True
     """
     charts_df['song'] = charts_df['song'].str.lower()
     charts_df = charts_df.drop_duplicates(subset=['song', 'artist'])
@@ -154,6 +193,11 @@ def calculate_prof_percent(row, profanity_list):
     :param row: row of the dataframe being processed
     :param profanity_list: list containing profane words
     :return: Profanity percent score for each row
+    >>> music, charts, profanity_list = read_music_data_files()
+    >>> merged = music_processing(charts, music)
+    >>> merged['percent_prof'] = merged.apply(calculate_prof_percent, args=[profanity_list], axis = 1)
+    >>> merged['percent_prof'].isnull().values.any()
+    0
     """
     lyrics = row[4].split(' ')
     total_length = len(lyrics)
